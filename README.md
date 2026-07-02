@@ -1,6 +1,6 @@
-#COP3530 Project 2
+# COP3530 Project 2
 
-##Frontend Info
+## Frontend Info
 - Menu Page:
 <img width="2483" height="1440" alt="image" src="https://github.com/user-attachments/assets/33c5a677-9f6b-4b08-9e7a-f76065b1c104" />
 
