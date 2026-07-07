@@ -2,9 +2,11 @@
 
 ## Frontend Info
 - Menu Page:
-<img width="2483" height="1440" alt="image" src="https://github.com/user-attachments/assets/33c5a677-9f6b-4b08-9e7a-f76065b1c104" />
+<img width="2486" height="1438" alt="image" src="https://github.com/user-attachments/assets/c5651357-2463-45b8-b155-7539c950de7d" />
 
 - Song Search Page:
+<img width="2483" height="1438" alt="image" src="https://github.com/user-attachments/assets/2a481741-2028-4b2a-a83e-688993f83cc9" />
 
 - About Page:
-<img width="2485" height="1438" alt="image" src="https://github.com/user-attachments/assets/ff375e3b-2580-414a-9d9e-e6db9fef83c3" />
+<img width="2481" height="1443" alt="image" src="https://github.com/user-attachments/assets/69a78e27-fb72-4565-b155-cb3b5fd14bd3" />
+
