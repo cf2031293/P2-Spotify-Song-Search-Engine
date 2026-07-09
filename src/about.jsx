@@ -3,13 +3,6 @@ import { ArrowLeft } from "lucide-react";
 export default function About({ onNavigate = () => {} }) {
   return (
     <div className="min-h-screen w-full bg-[#7D7ABC] flex justify-center px-6 py-20">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-        .font-display { font-family: 'Roboto', sans-serif; font-weight: 700; }
-        .font-body { font-family: 'Roboto', sans-serif; font-weight: 400; }
-        .font-mono { font-family: 'Roboto', sans-serif; font-weight: 500; }
-      `}</style>
-
       <div className="w-full max-w-[640px] flex flex-col gap-8">
         <h1 className="font-display text-[#F3EFE6] text-[32px] text-center">
           About

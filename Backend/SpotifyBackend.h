@@ -34,6 +34,7 @@ public:
 
     void printSongs(const vector<Song*>& results, int limit);
     int getSongCount() const;
+    const vector<Song>& getSongs() const;
 };
 
 #endif

@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import ReactDOM from 'react-dom/client'
+import './index.css'
 import Menu from './menu.jsx'
 import SongSearch from './song_search.jsx'
 import About from './about.jsx'

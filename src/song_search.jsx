@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Search, ChevronDown, List, LayoutGrid, ArrowLeft, Music } from "lucide-react";
 
 function AlbumArtPlaceholder({ size = "md", className = "" }) {
@@ -13,15 +13,6 @@ function AlbumArtPlaceholder({ size = "md", className = "" }) {
   );
 }
 
-const TRACKS = [
-  { title: "Track 1", artist: "Artist 1", tempo: 128 },
-  { title: "Track 2", artist: "Artist 2", tempo: 92 },
-  { title: "Track 3", artist: "Artist 3", tempo: 104 },
-  { title: "Track 4", artist: "Artist 4", tempo: 132 },
-  { title: "Track 5", artist: "Artist 5", tempo: 76 },
-  { title: "Track 6", artist: "Artist 6", tempo: 118 },
-];
-
 const FILTERS = ["Energy", "Danceability", "Tempo", "Acousticness"];
 
 export default function SongSearch({ onNavigate = () => {} }) {
@@ -29,29 +20,134 @@ export default function SongSearch({ onNavigate = () => {} }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState([]);
   const [view, setView] = useState("list");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
+  const activeRequestRef = useRef(null);
+  const requestIdRef = useRef(0);
 
-  const results = useMemo(() => {
-    if (!query.trim()) return TRACKS;
-    const q = query.toLowerCase();
-    return TRACKS.filter(
-      (t) => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q)
-    );
-  }, [query]);
+  useEffect(() => {
+    void fetchResults();
 
-  const toggleFilter = (f) =>
-    setActiveFilters((prev) =>
-      prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]
-    );
+    return () => {
+      if (activeRequestRef.current) {
+        activeRequestRef.current.abort();
+      }
+    };
+  }, []);
+
+  const fetchResults = async (searchQuery = query, filters = activeFilters, requestedPage = 1) => {
+    if (activeRequestRef.current) {
+      activeRequestRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    activeRequestRef.current = controller;
+    const requestId = ++requestIdRef.current;
+
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (searchQuery.trim()) params.set("q", searchQuery.trim());
+      filters.forEach((filter) => params.append("filter", filter));
+      params.set("page", String(requestedPage));
+      params.set("limit", "50");
+
+      const response = await fetch(`/api/search?${params.toString()}`, { signal: controller.signal });
+      const data = await response.json();
+      if (!response.ok || data.success === false) {
+        throw new Error(data.error || "Search request failed");
+      }
+
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
+
+      setResults(data.results || []);
+      setPage(data.page || 1);
+      setTotalPages(data.totalPages || 1);
+      setTotalResults(data.totalResults || 0);
+    } catch (error) {
+      if (error.name === "AbortError") {
+        return;
+      }
+
+      console.error("Failed to load results", error);
+      setResults([]);
+      setPage(1);
+      setTotalPages(1);
+      setTotalResults(0);
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+      }
+    }
+  };
+
+  const toggleFilter = (f) => {
+    const nextFilters = activeFilters.includes(f)
+      ? activeFilters.filter((x) => x !== f)
+      : [...activeFilters, f];
+
+    setActiveFilters(nextFilters);
+    setPage(1);
+    void fetchResults(query, nextFilters, 1);
+  };
+
+  const handleSearch = () => {
+    setPage(1);
+    void fetchResults(query, activeFilters, 1);
+  };
+
+  const handlePageChange = (nextPage) => {
+    if (nextPage < 1 || nextPage > totalPages) {
+      return;
+    }
+
+    setPage(nextPage);
+    void fetchResults(query, activeFilters, nextPage);
+  };
+
+  const formatArtists = (artistValue = "") =>
+    artistValue
+      .split(";")
+      .map((name) => name.trim())
+      .filter(Boolean)
+      .join(" & ");
+
+  const getVisiblePages = () => {
+    if (totalPages <= 1) {
+      return [];
+    }
+
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, idx) => idx + 1);
+    }
+
+    const pages = [1];
+    const start = Math.max(2, page - 1);
+    const end = Math.min(totalPages - 1, page + 1);
+
+    if (start > 2) {
+      pages.push("...");
+    }
+
+    for (let p = start; p <= end; p += 1) {
+      pages.push(p);
+    }
+
+    if (end < totalPages - 1) {
+      pages.push("...");
+    }
+
+    pages.push(totalPages);
+    return pages;
+  };
 
   return (
     <div className="min-h-screen w-full bg-[#7D7ABC] flex justify-center px-6 py-16">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-        .font-display { font-family: 'Roboto', sans-serif; font-weight: 700; }
-        .font-body { font-family: 'Roboto', sans-serif; font-weight: 400; }
-        .font-mono { font-family: 'Roboto', sans-serif; font-weight: 500; }
-      `}</style>
-
       <div className="w-full max-w-[860px] flex flex-col gap-8">
         <div className="flex items-center justify-between">
           <h1 className="font-display text-[#F3EFE6] text-[32px]">
@@ -76,8 +172,11 @@ export default function SongSearch({ onNavigate = () => {} }) {
               className="bg-transparent outline-none w-full font-body text-[#5B5F72] text-base"
             />
           </div>
-          <button className="shrink-0 rounded-[10px] bg-[#FFC067] px-8 font-display text-[#10121A] text-lg hover:bg-[#ff7d55] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F3EFE6]">
-            Search
+          <button
+            onClick={handleSearch}
+            className="shrink-0 rounded-[10px] bg-[#FFC067] px-8 font-display text-[#10121A] text-lg hover:bg-[#ff7d55] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F3EFE6]"
+          >
+            {loading ? "Loading..." : "Search"}
           </button>
         </div>
 
@@ -134,6 +233,13 @@ export default function SongSearch({ onNavigate = () => {} }) {
           )}
         </div>
 
+        <div className="flex items-center justify-between text-[#F3EFE6] text-sm font-body">
+          <span>
+            Showing {results.length} of {totalResults} tracks
+          </span>
+          <span>Page {page} of {totalPages}</span>
+        </div>
+
         <div
           className={
             view === "list"
@@ -143,7 +249,7 @@ export default function SongSearch({ onNavigate = () => {} }) {
         >
           {results.map((t, i) => (
             <div
-              key={t.title}
+              key={`${page}-${i}-${t.title}-${t.artist}`}
               className={
                 view === "list"
                   ? `flex items-center gap-4 py-4 ${
@@ -158,17 +264,56 @@ export default function SongSearch({ onNavigate = () => {} }) {
                   {t.title}
                 </span>
                 <span className="font-mono text-[#D0D2D0] text-xs">
-                  {t.artist} · {t.tempo} bpm
+                  {formatArtists(t.artist)} · {t.tempo} bpm
                 </span>
               </div>
             </div>
           ))}
-          {results.length === 0 && (
+          {!loading && results.length === 0 && (
             <p className="font-body text-[#D0D2D0] text-sm py-6">
               Nothing matches "{query}" — try a different title or artist.
             </p>
           )}
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-2 flex-wrap">
+            <button
+              onClick={() => handlePageChange(page - 1)}
+              disabled={loading || page <= 1}
+              className="rounded-full border border-[#2A2D3E] px-2.5 py-1 text-sm font-body text-[#F3EFE6] hover:bg-[#C5BCE7] hover:text-[#10121A] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              ←
+            </button>
+            {getVisiblePages().map((p, idx) =>
+              p === "..." ? (
+                <span key={`ellipsis-${idx}`} className="px-1 text-sm font-body text-[#D0D2D0]">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={p}
+                  onClick={() => handlePageChange(p)}
+                  disabled={loading || p === page}
+                  className={`min-w-8 rounded-full border px-2 py-1 text-sm font-body transition-colors disabled:cursor-not-allowed ${
+                    p === page
+                      ? "border-[#FF6A3D] bg-[#FF6A3D] text-[#10121A]"
+                      : "border-[#2A2D3E] text-[#F3EFE6] hover:bg-[#C5BCE7] hover:text-[#10121A] disabled:opacity-40"
+                  }`}
+                >
+                  {p}
+                </button>
+              )
+            )}
+            <button
+              onClick={() => handlePageChange(page + 1)}
+              disabled={loading || page >= totalPages}
+              className="rounded-full border border-[#2A2D3E] px-2.5 py-1 text-sm font-body text-[#F3EFE6] hover:bg-[#C5BCE7] hover:text-[#10121A] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              →
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 #include "SpotifyBackend.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 using namespace std;
 
 SpotifyBackend::SpotifyBackend()
@@ -33,7 +34,7 @@ bool SpotifyBackend::loadCSV(const string& filename) {
     ifstream file(filename);
 
     if (!file.is_open()) {
-        cout << "Could not open dataset file." << endl;
+        cout << "Could not open dataset file: " << filename << endl;
         return false;
     }
 
@@ -126,4 +127,8 @@ void SpotifyBackend::printSongs(const vector<Song*>& results, int limit) {
 
 int SpotifyBackend::getSongCount() const {
     return songs.size();
+}
+
+const vector<Song>& SpotifyBackend::getSongs() const {
+    return songs;
 }

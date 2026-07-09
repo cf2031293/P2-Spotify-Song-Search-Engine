@@ -1,5 +1,14 @@
 # COP3530 Project 2
 
+## Run Locally
+
+- Install dependencies: npm install
+- Start frontend + API together: npm run dev:all
+
+This starts:
+- Vite frontend at http://localhost:3000
+- API server at http://localhost:3001
+
 ## Frontend Info
 - Menu Page:
 <img width="2486" height="1438" alt="image" src="https://github.com/user-attachments/assets/c5651357-2463-45b8-b155-7539c950de7d" />

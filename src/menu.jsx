@@ -11,13 +11,6 @@ export default function Menu({ onNavigate = () => {} }) {
 
   return (
     <div className="min-h-screen w-full bg-[#7D7ABC] flex items-center justify-center px-6 py-24">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-        .font-display { font-family: 'Roboto', sans-serif; font-weight: 700; }
-        .font-body { font-family: 'Roboto', sans-serif; font-weight: 400; }
-        .font-mono { font-family: 'Roboto', sans-serif; font-weight: 500; }
-      `}</style>
-
       <div className="flex flex-col items-center gap-14 w-full max-w-sm">
 
         <div className="flex flex-col items-center gap-2">
